@@ -1,4 +1,4 @@
-import { useAppFeatures } from './use-app-features'
+import { useAppFeatures } from '../../hooks/introduction/use-app-features'
 
 export function AppFeatures() {
   const { data, error, isPending, isError, isFetching, refetch } = useAppFeatures()

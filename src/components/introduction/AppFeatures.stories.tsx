@@ -4,7 +4,7 @@ import { appFeatureHandlers } from '../../../.storybook/mocks/app-features'
 import { AppFeatures } from './AppFeatures'
 
 const meta = {
-  title: 'Introduction/AppFeatures',
+  title: 'Components/Introduction/AppFeatures',
   component: AppFeatures,
   decorators: [
     (Story) => <div className="mx-auto max-w-3xl px-6 pb-8 text-slate-900"><Story /></div>,

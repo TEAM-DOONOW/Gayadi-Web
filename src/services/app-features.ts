@@ -1,12 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-
-type AppFeature = {
+export type AppFeature = {
   id: number
   title: string
   description: string
 }
 
-async function fetchAppFeatures(signal: AbortSignal): Promise<AppFeature[]> {
+export async function fetchAppFeatures(signal: AbortSignal): Promise<AppFeature[]> {
   const response = await fetch(`${import.meta.env.BASE_URL}content/app-features.json`, {
     signal,
   })
@@ -16,11 +14,4 @@ async function fetchAppFeatures(signal: AbortSignal): Promise<AppFeature[]> {
   }
 
   return response.json()
-}
-
-export function useAppFeatures() {
-  return useQuery({
-    queryKey: ['introduction', 'features'],
-    queryFn: ({ signal }) => fetchAppFeatures(signal),
-  })
 }
