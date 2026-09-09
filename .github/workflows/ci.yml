@@ -1,0 +1,211 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Lint, Typecheck and Build
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check ESLint rules
+        run: npm run lint
+
+      - name: Check TypeScript types
+        run: npm run typecheck
+
+      - name: Build production app
+        run: npm run build
+
+  deploy:
+    needs: build
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      DEPLOY_ENV: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    steps:
+      - name: Check deployment credentials
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: python
+        run: |
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          def fail(message):
+              print(f'::error::{message}')
+              raise SystemExit(1)
+
+          for name in ('VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'):
+              value = os.environ.get(name, '')
+              if not value:
+                  fail(f'Missing GitHub Actions secret: {name}')
+              if any(character.isspace() for character in value):
+                  fail(f'{name} contains whitespace. Copy only the credential value.')
+
+          def check_access(path, label):
+              request = urllib.request.Request(
+                  f'https://api.vercel.com{path}',
+                  headers={'Authorization': f"Bearer {os.environ['VERCEL_TOKEN']}"},
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  hints = {
+                      401: 'Token authentication failed. Check token validity and expiration.',
+                      403: 'Access denied. Check token scope and team/project permissions.',
+                      404: 'Resource not found or inaccessible. Check IDs and token scope.',
+                  }
+                  fail(f'{label}: HTTP {error.code}. ' + hints.get(error.code, 'Check Vercel service status and retry.'))
+              except (urllib.error.URLError, TimeoutError):
+                  fail(f'{label}: Network request failed. Retry later.')
+              except ValueError:
+                  fail(f'{label}: Unexpected API response.')
+
+          org = os.environ['VERCEL_ORG_ID']
+          project = os.environ['VERCEL_PROJECT_ID']
+          query = '?' + urllib.parse.urlencode({'teamId': org}) if org.startswith('team_') else ''
+          settings = check_access('/v9/projects/' + urllib.parse.quote(project, safe='') + query, 'Project lookup')
+          if settings.get('id') != project:
+              fail('VERCEL_PROJECT_ID must be the project ID, not the project name.')
+          if settings.get('accountId') != org:
+              fail('VERCEL_ORG_ID does not match the project owner. Use orgId from vercel link.')
+          if org.startswith('team_'):
+              check_access('/v2/teams/' + urllib.parse.quote(org, safe=''), 'Team lookup')
+          print('Vercel project ownership and access checks passed.')
+
+      - name: Check out validated code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Build and deploy to Vercel
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          flags=()
+          if [ "$DEPLOY_ENV" = "production" ]; then
+            flags+=(--prod)
+          fi
+          vercel pull --yes --environment="$DEPLOY_ENV" --token="$VERCEL_TOKEN"
+          vercel build "${flags[@]}" --token="$VERCEL_TOKEN"
+          deployment_url=$(vercel deploy --prebuilt "${flags[@]}" --token="$VERCEL_TOKEN")
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: [build, deploy]
+    permissions: {}
+    if: >-
+      always() &&
+      (needs.build.result == 'failure' ||
+      needs.deploy.result == 'success' || needs.deploy.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send Discord notification
+        env:
+          CI_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          DEPLOY_URL: ${{ needs.deploy.outputs.url }}
+          DEPLOY_ENV: ${{ github.event_name == 'push' && 'Production' || 'Preview' }}
+          CI_REF: ${{ github.head_ref || github.ref_name }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        shell: python
+        run: |
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          webhook = os.environ.get('DISCORD_WEBHOOK_URL')
+          if not webhook:
+              print('::notice::DISCORD_WEBHOOK_URL is not configured; skipping notification.')
+              raise SystemExit(0)
+
+          with open(os.environ['GITHUB_EVENT_PATH'], encoding='utf-8') as file:
+              event = json.load(file)
+
+          run_url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          if os.environ['CI_RESULT'] == 'failure':
+              kind = 'CI'
+              status = os.environ['CI_RESULT']
+              ref = os.environ['CI_REF']
+              url = run_url
+              detail = '브랜치'
+          else:
+              kind = 'Vercel 배포'
+              status = os.environ['DEPLOY_RESULT']
+              ref = os.environ['DEPLOY_ENV']
+              url = os.environ.get('DEPLOY_URL') or run_url
+              detail = '환경'
+
+          labels = {'success': '성공', 'failure': '실패', 'error': '오류', 'cancelled': '취소', 'timed_out': '시간 초과'}
+          embed = {
+              'title': f'Gayadi Web · {kind} {labels.get(status, status)}',
+              'url': url,
+              'color': 3066993 if status == 'success' else 15158332,
+              'fields': [
+                  {'name': '저장소', 'value': event['repository']['full_name'][:1024]},
+                  {'name': detail, 'value': ref[:1024]},
+                  {'name': '결과', 'value': labels.get(status, status)},
+              ],
+          }
+          payload = json.dumps({'embeds': [embed], 'allowed_mentions': {'parse': []}}).encode('utf-8')
+          request = urllib.request.Request(
+              webhook,
+              data=payload,
+              headers={'Content-Type': 'application/json', 'User-Agent': 'Gayadi-GitHub-Actions'},
+              method='POST',
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  print(f'Discord notification sent ({response.status}).')
+          except urllib.error.HTTPError as error:
+              print(f'::error::Discord notification failed (HTTP {error.code}).')
+              raise SystemExit(1)
+          except (urllib.error.URLError, TimeoutError):
+              print('::error::Discord notification failed due to a network error.')
+              raise SystemExit(1)
