@@ -14,7 +14,10 @@ export function NoticeDialog({ title, open, onClose }: {
     if (!open && element.open) element.close()
   }, [open])
   return <dialog ref={dialog} className="trip-dialog footer-dialog" aria-labelledby={titleId}
-    onClose={onClose} onCancel={onClose}
+    onClose={event => {
+      // A queued close event can arrive after the same dialog has reopened.
+      if (!event.currentTarget.open) onClose()
+    }} onCancel={onClose}
     onClick={event => { if (event.target === event.currentTarget) onClose() }}>
     <button className="dialog-close" aria-label="닫기" onClick={onClose}>닫기</button>
     <span className="pill">준비 중</span>
