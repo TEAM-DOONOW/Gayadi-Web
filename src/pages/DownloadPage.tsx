@@ -1,4 +1,4 @@
-import { DownloadContent } from '../features/introduction/DownloadContent'
+import { DownloadContent } from '../components/download/DownloadContent'
 
 export function DownloadPage() {
 

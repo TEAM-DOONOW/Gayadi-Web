@@ -1,14 +1,7 @@
-import { SiteLayout } from './components/layout/SiteLayout'
-import { DownloadPage } from './pages/DownloadPage'
-import { IntroductionPage } from './pages/IntroductionPage'
+import AppRoutes from './routes/AppRoutes'
 
 function App() {
-  const isDownloadPage = window.location.pathname.replace(/\/+$/, '') === '/download'
-  return (
-    <SiteLayout isDownloadPage={isDownloadPage}>
-      {isDownloadPage ? <DownloadPage /> : <IntroductionPage />}
-    </SiteLayout>
-  )
+  return <AppRoutes />
 }
 
 export default App

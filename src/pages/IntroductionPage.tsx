@@ -1,8 +1,8 @@
-import { HeroSection } from '../features/introduction/HeroSection'
-import { IntroductionSection } from '../features/introduction/IntroductionSection'
-import { PlanningSection } from '../features/introduction/PlanningSection'
-import { MemoriesSection } from '../features/introduction/MemoriesSection'
-import { ClosingSection } from '../features/introduction/ClosingSection'
+import { HeroSection } from '../components/introduction/HeroSection'
+import { IntroductionSection } from '../components/introduction/IntroductionSection'
+import { PlanningSection } from '../components/introduction/PlanningSection'
+import { MemoriesSection } from '../components/introduction/MemoriesSection'
+import { ClosingSection } from '../components/introduction/ClosingSection'
 
 export function IntroductionPage() {
 

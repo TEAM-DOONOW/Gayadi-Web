@@ -2,7 +2,7 @@ import type { Preview } from '@storybook/react-vite'
 import { INITIAL_VIEWPORTS } from 'storybook/viewport'
 import { mswLoader } from 'msw-storybook-addon/csf3'
 import { StoryProviders } from './StoryProviders'
-import '../src/index.css'
+import '../src/style/index.css'
 
 const preview: Preview = {
   tags: ['autodocs'],
@@ -19,7 +19,7 @@ const preview: Preview = {
     // Each iframe isolates the MSW handlers and query cache in documentation.
     docs: { story: { inline: false, height: '600px' } },
     viewport: { options: INITIAL_VIEWPORTS },
-    options: { storySort: { order: ['Pages', 'Introduction'] } },
+    options: { storySort: { order: ['Pages', 'Layouts', 'Components', ['Shared', 'Introduction', 'Download']] } },
   },
 }
 
