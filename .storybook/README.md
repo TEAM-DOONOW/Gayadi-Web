@@ -15,7 +15,17 @@ http://localhost:6006 에서 Canvas, Docs, 접근성 패널을 확인하세요.
 | `npm run build-storybook` | 정적 빌드 (`storybook-static/`) |
 | `npm run test-storybook` | Chromium에서 스토리 렌더링 및 상호작용 검사 |
 
-- `Pages/App`: 기본 페이지, 모바일, 로딩, 오류, 빈 목록
+- `Pages/App`: 전체 소개 페이지와 모바일 화면
+- `Pages/IntroductionPage`, `Pages/DownloadPage`: 페이지 콘텐츠와 모바일 화면
+- `Layout/*`: 로고, 헤더, 푸터 정보·정책·소셜 채널, 안내 모달, 공통 레이아웃
+- `Introduction/*`: 섹션, 여행 카드·갤러리, 일정 탭·목록·항목, 여행 기록, 다운로드 안내·QR 패널
+- `Introduction/Itinerary`: 날짜 클릭·키보드 전환과 여러 인스턴스의 상태 독립성
+- `Introduction/SaveMemoryButton`: 저장·해제와 피드백
+- `Layout/SiteFooter`: 정책 모달 열기·닫기·취소 이벤트 및 포커스 복귀
+- `Introduction/DownloadContent`: 준비 중, HTTPS 링크, 잘못된 URL, HTTP URL
+
+분리된 UI는 각 컴포넌트 옆의 스토리에서 확인할 수 있습니다. Controls로 props를 변경하고,
+Interactions 패널에서 상태 전환 검증을 확인하세요. 다운로드 Ready 스토리는 예시 URL을 사용합니다.
 - `Introduction/AppFeatures`: 기본 목록, 로딩, 빈 목록, 오류, 재시도 성공, 긴 문구, 모바일
 
 스토리는 컴포넌트 옆의 `*.stories.tsx`에 작성합니다. `preview.tsx`에서
