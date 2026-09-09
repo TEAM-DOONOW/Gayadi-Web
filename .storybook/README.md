@@ -21,6 +21,8 @@ http://localhost:6006 에서 Canvas, Docs, 접근성 패널을 확인하세요.
 - `Components/Introduction/*`, `Components/Download/*`: 섹션, 여행 카드·갤러리, 일정 탭·목록·항목, 여행 기록, 다운로드 안내·QR 패널
 - `Components/Introduction/Itinerary`: 날짜 클릭·키보드 전환과 여러 인스턴스의 상태 독립성
 - `Components/Introduction/SaveMemoryButton`: 저장·해제와 피드백
+- `Components/Introduction/TravelArtStrip`: 국내 여행 일러스트 자동 이동, 마우스·포커스 일시정지, 중복 이미지의 접근성 처리
+- `Components/Shared/ScrollReveal`: 화면 진입 시 한 번 나타나는 효과와 스크롤 후 상태 유지
 - `Components/Shared/SiteFooter`: 정책 모달 열기·닫기·취소 이벤트 및 포커스 복귀
 - `Components/Download/DownloadContent`: 준비 중, HTTPS 링크, 잘못된 URL, HTTP URL
 
