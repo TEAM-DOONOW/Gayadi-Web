@@ -6,11 +6,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+  deployment_status:
+
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.event_name != 'deployment_status'
     name: Lint, Typecheck and Build
     timeout-minutes: 15
     runs-on: ubuntu-latest
@@ -35,3 +38,76 @@ jobs:
 
       - name: Build production app
         run: npm run build
+
+  notify:
+    needs: build
+    permissions: {}
+    if: >-
+      always() &&
+      (github.event_name != 'deployment_status' ||
+      contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state))
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Send Discord notification
+        env:
+          CI_RESULT: ${{ needs.build.result }}
+          CI_REF: ${{ github.head_ref || github.ref_name }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        shell: python
+        run: |
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          webhook = os.environ.get('DISCORD_WEBHOOK_URL')
+          if not webhook:
+              print('::notice::DISCORD_WEBHOOK_URL is not configured; skipping notification.')
+              raise SystemExit(0)
+
+          with open(os.environ['GITHUB_EVENT_PATH'], encoding='utf-8') as file:
+              event = json.load(file)
+
+          if os.environ['GITHUB_EVENT_NAME'] != 'deployment_status':
+              kind = 'CI'
+              status = os.environ['CI_RESULT']
+              ref = os.environ['CI_REF']
+              url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+              detail = '브랜치'
+          else:
+              deployment = event['deployment']
+              result = event['deployment_status']
+              kind = 'Vercel 배포'
+              status = result['state']
+              ref = deployment.get('environment') or 'unknown'
+              url = result.get('environment_url') or result.get('log_url') or event['repository']['html_url']
+              detail = '환경'
+
+          labels = {'success': '성공', 'failure': '실패', 'error': '오류', 'cancelled': '취소', 'timed_out': '시간 초과'}
+          embed = {
+              'title': f'Gayadi Web · {kind} {labels.get(status, status)}',
+              'url': url,
+              'color': 3066993 if status == 'success' else 15158332,
+              'fields': [
+                  {'name': '저장소', 'value': event['repository']['full_name'][:1024]},
+                  {'name': detail, 'value': ref[:1024]},
+                  {'name': '결과', 'value': labels.get(status, status)},
+              ],
+          }
+          payload = json.dumps({'embeds': [embed], 'allowed_mentions': {'parse': []}}).encode('utf-8')
+          request = urllib.request.Request(
+              webhook,
+              data=payload,
+              headers={'Content-Type': 'application/json', 'User-Agent': 'Gayadi-GitHub-Actions'},
+              method='POST',
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  print(f'Discord notification sent ({response.status}).')
+          except urllib.error.HTTPError as error:
+              print(f'::error::Discord notification failed (HTTP {error.code}).')
+              raise SystemExit(1)
+          except (urllib.error.URLError, TimeoutError):
+              print('::error::Discord notification failed due to a network error.')
+              raise SystemExit(1)
