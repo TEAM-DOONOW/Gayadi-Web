@@ -8,7 +8,8 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('다음 여행, 가야디와 함께')
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('여행 가야지, 가야디')
+    await expect(canvas.getByRole('img', { name: '가야디' })).toBeVisible()
     await expect(canvas.getByRole('tablist', { name: '여행 날짜' })).toBeVisible()
     await expect(canvas.getByRole('link', { name: '여행 시작하기' })).toHaveAttribute('href', '/download')
   },

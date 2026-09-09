@@ -4,8 +4,11 @@ export function HeroSection() {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-copy">
-        <h1 id="hero-title">다음 여행,<br className="mobile-break" /> 가야디와 함께</h1>
-        <p className="hero-description">국내 여행 계획부터 기록까지.</p>
+        <h1 id="hero-title">
+          <span>여행 가야지,</span>
+          <img className="hero-logo" src="/images/gayadi_logo.png" alt="가야디" width="1106" height="226" />
+        </h1>
+        <p className="hero-description">계획부터 기록까지, 한 번에 가야디.</p>
       </div>
       <TravelArtStrip />
     </section>
