@@ -55,13 +55,56 @@ jobs:
       - name: Check deployment credentials
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        shell: python
         run: |
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
-            if [ -z "${!name}" ]; then
-              echo "::error::Missing GitHub Actions secret: $name"
-              exit 1
-            fi
-          done
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          def fail(message):
+              print(f'::error::{message}')
+              raise SystemExit(1)
+
+          for name in ('VERCEL_TOKEN', 'VERCEL_ORG_ID', 'VERCEL_PROJECT_ID'):
+              value = os.environ.get(name, '')
+              if not value:
+                  fail(f'Missing GitHub Actions secret: {name}')
+              if any(character.isspace() for character in value):
+                  fail(f'{name} contains whitespace. Copy only the credential value.')
+
+          def check_access(path, label):
+              request = urllib.request.Request(
+                  f'https://api.vercel.com{path}',
+                  headers={'Authorization': f"Bearer {os.environ['VERCEL_TOKEN']}"},
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  hints = {
+                      401: 'Token authentication failed. Check token validity and expiration.',
+                      403: 'Access denied. Check token scope and team/project permissions.',
+                      404: 'Resource not found or inaccessible. Check IDs and token scope.',
+                  }
+                  fail(f'{label}: HTTP {error.code}. ' + hints.get(error.code, 'Check Vercel service status and retry.'))
+              except (urllib.error.URLError, TimeoutError):
+                  fail(f'{label}: Network request failed. Retry later.')
+              except ValueError:
+                  fail(f'{label}: Unexpected API response.')
+
+          org = os.environ['VERCEL_ORG_ID']
+          project = os.environ['VERCEL_PROJECT_ID']
+          query = '?' + urllib.parse.urlencode({'teamId': org}) if org.startswith('team_') else ''
+          settings = check_access('/v9/projects/' + urllib.parse.quote(project, safe='') + query, 'Project lookup')
+          if settings.get('id') != project:
+              fail('VERCEL_PROJECT_ID must be the project ID, not the project name.')
+          if settings.get('accountId') != org:
+              fail('VERCEL_ORG_ID does not match the project owner. Use orgId from vercel link.')
+          if org.startswith('team_'):
+              check_access('/v2/teams/' + urllib.parse.quote(org, safe=''), 'Team lookup')
+          print('Vercel project ownership and access checks passed.')
 
       - name: Check out validated code
         uses: actions/checkout@v7
