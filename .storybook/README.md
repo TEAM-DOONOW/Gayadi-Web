@@ -17,16 +17,20 @@ http://localhost:6006 에서 Canvas, Docs, 접근성 패널을 확인하세요.
 
 - `Pages/App`: 전체 소개 페이지와 모바일 화면
 - `Pages/IntroductionPage`, `Pages/DownloadPage`: 페이지 콘텐츠와 모바일 화면
-- `Layout/*`: 로고, 헤더, 푸터 정보·정책·소셜 채널, 안내 모달, 공통 레이아웃
-- `Introduction/*`: 섹션, 여행 카드·갤러리, 일정 탭·목록·항목, 여행 기록, 다운로드 안내·QR 패널
-- `Introduction/Itinerary`: 날짜 클릭·키보드 전환과 여러 인스턴스의 상태 독립성
-- `Introduction/SaveMemoryButton`: 저장·해제와 피드백
-- `Layout/SiteFooter`: 정책 모달 열기·닫기·취소 이벤트 및 포커스 복귀
-- `Introduction/DownloadContent`: 준비 중, HTTPS 링크, 잘못된 URL, HTTP URL
+- `Components/Shared/*`, `Layouts/SiteLayout`: 로고, 헤더, 푸터 정보·정책·소셜 채널, 안내 모달, 공통 레이아웃
+- `Components/Introduction/*`, `Components/Download/*`: 섹션, 여행 카드·갤러리, 일정 탭·목록·항목, 여행 기록, 다운로드 안내·QR 패널
+- `Components/Introduction/Itinerary`: 날짜 클릭·키보드 전환과 여러 인스턴스의 상태 독립성
+- `Components/Introduction/SaveMemoryButton`: 저장·해제와 피드백
+- `Components/Shared/SiteFooter`: 정책 모달 열기·닫기·취소 이벤트 및 포커스 복귀
+- `Components/Download/DownloadContent`: 준비 중, HTTPS 링크, 잘못된 URL, HTTP URL
+
+- `Components/Introduction/AppFeatures`: 기본 목록, 로딩, 빈 목록, 오류, 재시도 성공, 긴 문구, 모바일
 
 분리된 UI는 각 컴포넌트 옆의 스토리에서 확인할 수 있습니다. Controls로 props를 변경하고,
 Interactions 패널에서 상태 전환 검증을 확인하세요. 다운로드 Ready 스토리는 예시 URL을 사용합니다.
-- `Introduction/AppFeatures`: 기본 목록, 로딩, 빈 목록, 오류, 재시도 성공, 긴 문구, 모바일
+
+전역 스타일은 `src/style/index.css`를 공유합니다. 공통 레이아웃은 `src/layouts/`,
+UI는 `src/components/{shared,introduction,download}/`, 페이지는 `src/pages/`에 둡니다.
 
 스토리는 컴포넌트 옆의 `*.stories.tsx`에 작성합니다. `preview.tsx`에서
 스토리마다 독립적인 Query Client를 제공하며 오류 상태를 바로 확인하도록 자동 재시도를 끕니다.
