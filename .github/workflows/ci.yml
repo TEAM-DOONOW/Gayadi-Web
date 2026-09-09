@@ -6,14 +6,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
-  deployment_status:
-
 permissions:
   contents: read
 
 jobs:
   build:
-    if: github.event_name != 'deployment_status'
     name: Lint, Typecheck and Build
     timeout-minutes: 15
     runs-on: ubuntu-latest
@@ -39,19 +36,78 @@ jobs:
       - name: Build production app
         run: npm run build
 
-  notify:
+  deploy:
     needs: build
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      DEPLOY_ENV: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    steps:
+      - name: Check deployment credentials
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Check out validated code
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Build and deploy to Vercel
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          flags=()
+          if [ "$DEPLOY_ENV" = "production" ]; then
+            flags+=(--prod)
+          fi
+          vercel pull --yes --environment="$DEPLOY_ENV" --token="$VERCEL_TOKEN"
+          vercel build "${flags[@]}" --token="$VERCEL_TOKEN"
+          deployment_url=$(vercel deploy --prebuilt "${flags[@]}" --token="$VERCEL_TOKEN")
+          echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: [build, deploy]
     permissions: {}
     if: >-
       always() &&
-      (github.event_name != 'deployment_status' ||
-      contains(fromJSON('["success", "failure", "error"]'), github.event.deployment_status.state))
+      (needs.build.result == 'failure' ||
+      needs.deploy.result == 'success' || needs.deploy.result == 'failure')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Send Discord notification
         env:
           CI_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          DEPLOY_URL: ${{ needs.deploy.outputs.url }}
+          DEPLOY_ENV: ${{ github.event_name == 'push' && 'Production' || 'Preview' }}
           CI_REF: ${{ github.head_ref || github.ref_name }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         shell: python
@@ -69,19 +125,18 @@ jobs:
           with open(os.environ['GITHUB_EVENT_PATH'], encoding='utf-8') as file:
               event = json.load(file)
 
-          if os.environ['GITHUB_EVENT_NAME'] != 'deployment_status':
+          run_url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          if os.environ['CI_RESULT'] == 'failure':
               kind = 'CI'
               status = os.environ['CI_RESULT']
               ref = os.environ['CI_REF']
-              url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+              url = run_url
               detail = '브랜치'
           else:
-              deployment = event['deployment']
-              result = event['deployment_status']
               kind = 'Vercel 배포'
-              status = result['state']
-              ref = deployment.get('environment') or 'unknown'
-              url = result.get('environment_url') or result.get('log_url') or event['repository']['html_url']
+              status = os.environ['DEPLOY_RESULT']
+              ref = os.environ['DEPLOY_ENV']
+              url = os.environ.get('DEPLOY_URL') or run_url
               detail = '환경'
 
           labels = {'success': '성공', 'failure': '실패', 'error': '오류', 'cancelled': '취소', 'timed_out': '시간 초과'}
