@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <title>QR image placeholder</title>
+  <rect width="180" height="180" rx="4" fill="white"/>
+  <g fill="#273248">
+    <path fill-rule="evenodd" d="M18 18h42v42H18z M24 24v30h30V24z M120 18h42v42h-42z M126 24v30h30V24z M18 120h42v42H18z M24 126v30h30v-30z"/>
+    <path d="M30 30h18v18H30z M132 30h18v18h-18z M30 132h18v18H30z M72 18h12v12H72z M90 24h18v6H90z M66 42h12v18H66z M84 36h12v12H84z M102 42h6v24h-6z M18 72h12v12H18z M36 66h12v6H36z M48 78h12v12H48z M24 96h18v12H24z M54 102h12v6H54z M72 60h12v12H72z M90 66h12v12H90z M120 72h18v6h-18z M144 66h18v18h-18z M132 90h12v18h-12z M150 96h12v6h-12z M72 120h12v18H72z M90 132h12v12H90z M66 150h18v12H66z M96 156h12v6H96z M108 114h12v12h-12z M126 120h12v18h-12z M144 114h18v6h-18z M144 132h12v12h-12z M114 144h12v18h-12z M132 150h12v6h-12z M150 150h12v12h-12z"/>
+  </g>
+  <rect x="45" y="79" width="90" height="25" rx="5" fill="#f3f4f9"/>
+  <text x="90" y="96" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#6f7788">SAMPLE QR</text>
+</svg>
