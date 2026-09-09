@@ -281,10 +281,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
 }
 
 .download-page { min-height: 100svh; background: #f3f4f9; }
-.download-page .site-header { position: static; height: 48px; background: #fff; border-top: 1px solid #ffd8c7; border-bottom: 1px solid #d9dce5; }
-.download-page .nav-inner { max-width: 720px; height: 100%; margin: auto; padding: 0; }
-.download-page .brand-logo-header img { width: 72px; filter: none; }
-.download-page .button-small { min-height: 32px; padding: 8px 0; background: transparent; color: #273248; font-size: 11px; }
 .download-main { max-width: 720px; margin: 27px auto 0; }
 .download-card { min-height: 424px; padding: 40px 24px 64px; border-radius: 6px; background: #fff; box-shadow: 0 3px 20px #27324808; }
 .download-content { text-align: center; }
@@ -307,22 +303,11 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
 .download-qr { background: white; border-radius: 4px; padding: 0; line-height: 0; }
 .download-qr img { width: 136px; max-width: 100%; height: auto; }
 .download-logo { width: 40px; height: auto; opacity: .45; object-fit: contain; }
-.download-page .footer { max-width: 720px; margin: 0 auto; padding: 66px 0 32px; background: transparent; }
 .text-button { display: inline-block; }
-.download-page .footer-inner { max-width: 720px; }
-.download-page .brand-logo-footer img { width: 40px; opacity: .65; }
-.download-page .footer .footer-copyright { font-size: 11px; margin: 5px 0 6px; }
-.download-page .footer-details p { font-size: 10px; line-height: 1.5; }
-.download-page .footer-policies { margin-top: 24px; font-size: 10px; }
-.download-page .footer-socials { gap: 6px; }
-.download-page .footer-socials button, .download-page .footer-socials a { width: 24px; height: 24px; padding: 6px; }
-.download-page .footer-socials img { width: 12px; height: 12px; }
 .download-direct { display: inline-block; margin-top: 24px; color: #626b7d; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 760px) {
-  .download-page .nav-inner { padding: 0 20px; }
   .download-main { margin: 24px 20px 0; }
   .download-card { min-height: 424px; padding: 40px 20px 48px; }
-  .download-page .footer { padding: 48px 20px 32px; }
 }
 
 /* Reveal text once as each section enters the viewport. */
