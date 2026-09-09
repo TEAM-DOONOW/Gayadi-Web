@@ -10,7 +10,7 @@ const meta = {
       <Story />
     </div>
   </div>],
-  args: { item: destinations[2] },
+  args: { item: destinations[0] },
 } satisfies Meta<typeof DestinationCard>
 
 export default meta
