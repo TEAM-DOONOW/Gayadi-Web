@@ -36,6 +36,15 @@ jobs:
       - name: Build production app
         run: npm run build
 
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Install Chromium for story tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Test Storybook
+        run: npm run test-storybook
+
   deploy:
     needs: build
     if: >-
