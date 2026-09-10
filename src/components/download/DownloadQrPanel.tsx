@@ -1,12 +1,11 @@
-// Replace this asset with the supplied QR image when available.
-const APP_DOWNLOAD_QR_IMAGE = '/images/download-qr-placeholder.svg'
+import gayadiQr from '../../assets/images/gayadi_qr.png'
 
 export function DownloadQrPanel() {
 
   return (
     <div className="download-qr-panel">
       <div className="download-qr">
-        <img src={APP_DOWNLOAD_QR_IMAGE} alt="앱 다운로드 QR 임시 이미지" width="180" height="180" />
+        <img src={gayadiQr} alt="가야디 앱 다운로드 QR 코드" width="180" height="180" />
       </div>
       <img className="download-logo" src="/images/gayadi_logo.png" alt="GAYADI" width="1106" height="226" />
     </div>
