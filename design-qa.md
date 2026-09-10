@@ -77,4 +77,49 @@
 - 데스크톱 및 모바일 확인: `C:/Users/admin/AppData/Local/Temp/gayadi-alerts-desktop.png`, `C:/Users/admin/AppData/Local/Temp/gayadi-alerts-mobile.png`. 320px·390px 가로 넘침 없음.
 - 앱 및 Storybook 빌드, 변경 파일 린트, 추가 스토리 4개 테스트 통과.
 
+## 데스크톱 전체 스케일 확대
+
+- Source visual truth: `/var/folders/5m/5849kbhd7756m71gsp4hf5p40000gn/T/TemporaryItems/NSIRD_screencaptureui_73ffqQ/스크린샷 2026-09-09 오후 10.58.22.png` (2792 × 1854px).
+- Initial implementation: `/tmp/gayadi-main-before.png`, `/tmp/gayadi-download-before.png`.
+- Final implementation: `/tmp/gayadi-main-planning-after-2.png` (1772 × 960px), `/tmp/gayadi-download-after-2.png` (1772 × 1148px).
+- Responsive implementation: `/tmp/gayadi-main-mobile-after.png`, `/tmp/gayadi-download-mobile-after.png` (390px CSS viewport, deviceScaleFactor 1).
+- Same-frame comparison: `/tmp/gayadi-reference-comparison.png`. 참고 이미지의 브라우저 크롬을 제외한 콘텐츠를 1772 × 960px로 정규화하고 구현 화면과 나란히 비교했다.
+- State: 데스크톱 메인 여행 일정 섹션과 다운로드 기본 화면. 참고 제품의 콘텐츠가 아닌 폭, 타이포 위계, 카드 밀도만 시각 기준으로 사용했다.
+
+### 비교 결과
+
+- Typography: Pretendard와 기존 문구를 유지하면서 데스크톱 주요 제목을 34~42px, 섹션 제목을 36px, 설명을 20~22px로 확대했다. 모바일에서는 기존 크기를 유지해 줄바꿈과 정보 밀도를 보호했다.
+- Layout: 첫 비교에서 848px 기반의 좁은 본문이 참고 화면 대비 약 30~40% 작게 보이는 P1 불일치를 확인했다. 데스크톱 섹션 콘텐츠 폭을 1552px로 확대해 1772px 뷰포트에서 좌우 약 110px 여백을 남기도록 수정했다.
+- Spacing: 주요 카드 높이를 440px 이상으로 확대하고 섹션 간격, 카드 내부 패딩, 탭과 알림 항목 간격을 같은 비율로 조정했다. 다운로드 카드는 1552px 폭과 620px 최소 높이로 확대했다.
+- Colors: 기존 가야디의 주황색, 흰색, 회청색, 어두운 히어로 색상 토큰을 유지했다. 참고 화면의 다른 브랜드 색상은 복제하지 않았다.
+- Images: 기존 가야디 여행 이미지, 캐릭터, 로고, QR 에셋을 그대로 사용하고 확대된 슬롯에서 비율 왜곡이나 잘림이 없는지 확인했다.
+- Copy: 모든 가야디 문구와 접근성 레이블을 유지했다. 프롬프트나 참고 사이트 문구는 구현에 포함하지 않았다.
+- Focused comparison: 여행 일정 카드에서 1552px 콘텐츠 폭, 2열 균형, 사진 크롭, 일정 텍스트와 탭 크기를 확인했다. 다운로드 화면에서 제목, 설명, QR 패널의 확대와 중앙 정렬을 확인했다.
+
+### 수정 이력 및 검증
+
+- 1차 확대에서 섹션 콘텐츠 폭이 1136px로 남아 참고 화면보다 여전히 좁은 P2 차이를 확인했다.
+- 최종 패스에서 섹션 최대 폭을 1616px로 조정해 내부 카드가 1552px로 렌더링되도록 수정했다. 비교 이미지에서 참고 화면과 동일한 좌우 여백 밀도를 확인했다.
+- 1772px 데스크톱과 390px 모바일에서 문서 가로 넘침 없음.
+- 일정 DAY 2 선택, 여행 기억하기 상태 전환, 다운로드 페이지 이동 및 제목 노출 확인.
+- 브라우저 콘솔 오류 없음. 타입 검사, ESLint, 프로덕션 빌드 통과.
+- 남은 P0/P1/P2 사항 없음.
+
+## 히어로 브랜드 카피 및 로고
+
+- Final implementation: `/tmp/gayadi-hero-rhyme-final-desktop.png` (1772 × 960px), `/tmp/gayadi-hero-rhyme-final-mobile.png` (390 × 844px), deviceScaleFactor 1.
+- Typography and copy: 제목을 `여행 가야지, 가야디`로 변경해 `가야지–가야디` 라임을 만들고, 설명은 `계획부터 기록까지, 한 번에 가야디.`로 정리했다. 데스크톱 48px, 모바일 30px의 제목 위계를 확인했다.
+- Spacing and layout: 데스크톱에서는 제목과 240px 로고를 한 줄로, 모바일에서는 168px 로고를 다음 줄에 배치했다. 두 뷰포트 모두 중앙 정렬과 가로 넘침 없음.
+- Colors and image quality: 텍스트는 기존 밝은 전경색을 유지하고 실제 `gayadi_logo.png`를 흰색으로 표시했다. 로고 비율, 투명 배경, 가장자리 선명도를 확인했다.
+- Accessibility and content: 제목의 접근 가능한 이름은 `여행 가야지, 가야디`이며 로고 대체 텍스트는 `가야디`다. 설명 문구 노출과 이미지 로드를 브라우저에서 확인했다.
+- 앱 빌드, Storybook 빌드, 타입 검사와 ESLint 통과. 남은 P0/P1/P2 사항 없음.
+
+## 알림 미리보기 이미지 교체
+
+- Source asset: `public/images/alarm.png` (454 × 297px).
+- Final implementation: `/tmp/gayadi-alert-layout.png`, `/tmp/gayadi-alert-layout-mobile.png`.
+- 기존 휴대폰 SVG와 말풍선은 유지하고, 오른쪽 코드 기반 알림 목록만 사용자 제공 이미지로 교체했다.
+- 데스크톱에서는 최대 1200px의 좌우 2열로, 모바일에서는 휴대폰 SVG와 알림 이미지를 위아래로 배치한다.
+- 이미지 대체 텍스트, 데스크톱·모바일 가로 넘침 없음, 타입 검사, ESLint와 앱 빌드를 확인했다.
+
 final result: passed
